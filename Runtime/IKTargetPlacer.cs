@@ -17,6 +17,7 @@ namespace PolearmStudios.Animation.Procedural
         [SerializeField] float footHeight = 2;
         [Header("Step Data")]
         [SerializeField] float stepHeight = .5f;
+        [SerializeField] float shortStepHeightModifier = .1f;
         [SerializeField] float stepSpeed = 1.5f;
         [SerializeField] float stepSpeedOffset = .25f;
         [SerializeField] float stepLength = 1.5f;
@@ -111,7 +112,7 @@ namespace PolearmStudios.Animation.Procedural
             if (!ShortStep && !LongStep) return;
             target.up = hit.normal;
             speed = ShortStep ? stepSpeed : stepSpeed * 1.25f;
-            distTraveled = Vector3.Distance(FootDestination, target.position) * (ShortStep ? .1f : 1);
+            distTraveled = Vector3.Distance(FootDestination, target.position) * (ShortStep ? shortStepHeightModifier : 1);
             isGrounded = false;
         }
 
