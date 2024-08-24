@@ -9,6 +9,8 @@ namespace PolearmStudios.Animation.Procedural
         [Header("References")]
         [SerializeField] IKTargetPlacer opposite;
         [SerializeField] Transform target;
+        [SerializeField] Transform parent;
+        [SerializeField] CenterOfMass centerOfMass;
         [SerializeField] LayerMask groundMask;
         [SerializeField] IKTargetPlacerData data;
         float stepSpeed;
@@ -22,18 +24,24 @@ namespace PolearmStudios.Animation.Procedural
         float speed;
 
         #region Complex Variables
-        private Vector3 FootDestination { get { return hit.point + (((data.StepLength) * (hit.point - target.position).normalized) + (hit.normal * data.FootHeight)); } }
+        private Vector3 FootDestination { get 
+            { 
+                Vector3 adjustedHitPoint = hit.point + ( centerOfMass.Offset);
+                return adjustedHitPoint + (((data.StepLength) * (adjustedHitPoint - target.position).normalized) + (hit.normal * data.FootHeight)); 
+            } 
+        }
         private Vector3 Outward { get { return (transform.position - opposite.transform.position).normalized; } }
-        private Vector3 Down => -transform.up;
+        private Vector3 Down => -parent.up;
         private Vector3 Forward => transform.forward;
         private Vector3 Backward => -transform.forward;
-        private bool LongStep { get { return Vector3.Distance(FootDestination, target.position) > farDistance && opposite.isGrounded; } }
-        private bool ShortStep { get { return Vector3.Distance(FootDestination, target.position) > nearDistance && opposite.isGrounded; } }
+        private bool LongStep { get { return Vector3.Distance(FootDestination, target.position) > farDistance && (opposite.isGrounded || centerOfMass.MovementDirection.magnitude > data.StepThreshold); } }
+        private bool ShortStep { get { return Vector3.Distance(FootDestination, target.position) > nearDistance && (opposite.isGrounded || centerOfMass.MovementDirection.magnitude > data.StepThreshold); } }
         #endregion
 
         #region Public Variables
         public Vector3 TargetPos { get => target.position; }
         public bool SkipForAverage;
+        public float LimbMass = 5f;
         #endregion
 
         private void Awake() => Initialize();
@@ -127,7 +135,7 @@ namespace PolearmStudios.Animation.Procedural
             if (!isGrounded) Gizmos.color = Color.blue;
             if (ShortStep) Gizmos.color = Color.yellow;
             if (LongStep) Gizmos.color = Color.red;
-
+            Gizmos.DrawRay(target.position, centerOfMass.Offset);
             Gizmos.DrawCube(target.position, Vector3.one);
             Gizmos.color = Color.black;
             Gizmos.DrawSphere(FootDestination, .5f);

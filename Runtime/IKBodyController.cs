@@ -10,13 +10,21 @@ namespace PolearmStudios.Animation.Procedural
         [Header("References")]
         [SerializeField] IKTargetPlacer[] legs;
         [SerializeField] Transform body;
+        [SerializeField] CenterOfMass centerOfMass;
         [SerializeField] LayerMask groundMask;
         [Header("Settings")]
         [SerializeField] Vector3 offset = Vector3.up;
         [SerializeField] float movementSpeed = 1.5f;
+        [SerializeField] float mass = 15;
 
         Vector3 averagePosition;
         Vector3 averageUp;
+        Vector3 desiredPosition;
+        Vector3 previousPos;
+        Quaternion desiredRotation;
+
+        private Vector3 PrevBodyOffset { get { return (body.position - previousPos).normalized; } }
+
 
         private void Start()
         {
@@ -36,13 +44,20 @@ namespace PolearmStudios.Animation.Procedural
                 return;
             }
             averagePosition += offset;
+            desiredPosition = averagePosition + centerOfMass.Offset;
+            desiredRotation = Quaternion.LookRotation(PrevBodyOffset.magnitude > 0 ? PrevBodyOffset : body.forward, averageUp);
         }
 
         private void LateUpdate()
         {
-            body.position = Vector3.MoveTowards(body.position, averagePosition, Time.smoothDeltaTime * movementSpeed);
-            body.up = Vector3.MoveTowards(body.up, averageUp, Time.smoothDeltaTime * movementSpeed);
-            body.Rotate(0, -Vector3.SignedAngle(transform.forward, body.forward, transform.up), 0);
+            //body.up = Vector3.MoveTowards(body.up, averageUp, Time.smoothDeltaTime * movementSpeed);
+
+            body.SetPositionAndRotation(
+                Vector3.MoveTowards(body.position, desiredPosition, Time.smoothDeltaTime * movementSpeed),
+                Quaternion.Slerp(body.rotation, desiredRotation, movementSpeed * Time.smoothDeltaTime)
+                );
+            
+            previousPos = body.position;
         }
 
         private void CalculateAverages()
@@ -57,6 +72,20 @@ namespace PolearmStudios.Animation.Procedural
             }
             averagePosition /= legs.Length;
             averageUp /= legs.Length;
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawSphere(averagePosition, 0.5f);
+            if (Physics.Raycast(averagePosition, Vector3.down, out RaycastHit hit, Mathf.Infinity, groundMask))
+            {
+                Gizmos.DrawLine(averagePosition, hit.point);
+            }
+
+            Gizmos.color = Color.green;
+            Gizmos.DrawSphere(desiredPosition, 0.5f);
+
         }
     }
 
