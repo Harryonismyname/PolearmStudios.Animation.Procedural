@@ -7,65 +7,65 @@ namespace PolearmStudios.Animation.Procedural
     {
         [Header("Constraints")]
         [SerializeField] float farDistance;
-        public float FarDistance { get; set; }
         [SerializeField] float nearDistance;
-        public float NearDistance {  get; set; }
         [SerializeField] float legLength;
-        public float LegLength {  get; set; }
         [SerializeField] float footHeight;
-        public float FootHeight { get; set; }
         [Header("Step Data")]
         [SerializeField] float stepHeight;
-        public float StepHeight {  get; set; }
         [SerializeField] float shortStepHeightModifier;
-        public float ShortStepHeightModifier {  get; set; }
         [SerializeField] float stepSpeed;
-        public float StepSpeed {  get; set; }
         [SerializeField] float stepLength;
-        public float StepLength {  get; set; }
         [SerializeField] float stepThreshold;
-        public float StepThreshold {  get; set; }
         [SerializeField] float randomizationOffset;
-        public float RandomizationOffset {  get; set; }
         [SerializeField] float longStepSpeedModifier;
-        public float LongStepSpeedModifier {  get; set; }
+        [SerializeField] float runSpeedThreshold;
+        [SerializeField] float runModifier;
 
-        public void LoadData()
+        public ProceduralStepData LoadData()
         {
-            FarDistance = farDistance;
-            NearDistance = nearDistance;
-            LegLength = legLength;
-            FootHeight = footHeight;
-            StepHeight = stepHeight;
-            ShortStepHeightModifier = shortStepHeightModifier;
-            StepSpeed = stepSpeed;
-            StepLength = stepLength;
-            StepThreshold = stepThreshold;
-            RandomizationOffset = randomizationOffset;
-            LongStepSpeedModifier = longStepSpeedModifier;
+            ProceduralStepData stepData = new()
+            {
+                FarDistance = farDistance,
+                NearDistance = nearDistance,
+                LegLength = legLength,
+                FootHeight = footHeight,
+                StepHeight = stepHeight,
+                ShortStepHeightModifier = shortStepHeightModifier,
+                StepSpeed = stepSpeed,
+                StepLength = stepLength,
+                StepThreshold = stepThreshold,
+                RandomizationOffset = randomizationOffset,
+                LongStepSpeedModifier = longStepSpeedModifier,
+                RunSpeedThreshold = runSpeedThreshold,
+                RunModifier = runModifier,
+            };
+            return stepData;
         }
 
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            FarDistance = farDistance;
-            NearDistance = nearDistance;
-            LegLength = legLength;
-            FootHeight = footHeight;
-            StepHeight = stepHeight;
-            ShortStepHeightModifier = shortStepHeightModifier;
-            StepSpeed = stepSpeed;
-            StepLength = stepLength;
-            StepThreshold = stepThreshold;
-            RandomizationOffset = randomizationOffset;
-            LongStepSpeedModifier = longStepSpeedModifier;
-
-            StepSpeed = StepSpeed > StepThreshold ? StepSpeed : StepThreshold;
-            StepThreshold = StepThreshold < StepSpeed ? StepThreshold : StepSpeed;
-            FarDistance = FarDistance > NearDistance ? FarDistance : NearDistance;
-            NearDistance = NearDistance < FarDistance ? NearDistance : FarDistance;
+            stepSpeed = stepSpeed > stepThreshold ? stepSpeed : stepThreshold;
+            stepThreshold = stepThreshold < stepSpeed ? stepThreshold : stepSpeed;
+            farDistance = farDistance > nearDistance ? farDistance : nearDistance;
+            nearDistance = nearDistance < farDistance ? nearDistance : farDistance;
         }
 #endif
     }
-
+    public struct ProceduralStepData
+    {
+        public float FarDistance { get; set; }
+        public float NearDistance { get; set; }
+        public float LegLength { get; set; }
+        public float FootHeight { get; set; }
+        public float StepHeight { get; set; }
+        public float ShortStepHeightModifier { get; set; }
+        public float StepSpeed { get; set; }
+        public float StepLength { get; set; }
+        public float StepThreshold { get; set; }
+        public float RandomizationOffset { get; set; }
+        public float LongStepSpeedModifier { get; set; }
+        public float RunSpeedThreshold { get; set; }
+        public float RunModifier { get; set; }
+    }
 }
