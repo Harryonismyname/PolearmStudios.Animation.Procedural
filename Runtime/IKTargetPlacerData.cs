@@ -52,20 +52,21 @@ namespace PolearmStudios.Animation.Procedural
         }
 #endif
     }
+    [System.Serializable]
     public struct ProceduralStepData
     {
-        public float FarDistance { get; set; }
-        public float NearDistance { get; set; }
-        public float LegLength { get; set; }
-        public float FootHeight { get; set; }
-        public float StepHeight { get; set; }
-        public float ShortStepHeightModifier { get; set; }
-        public float StepSpeed { get; set; }
-        public float StepLength { get; set; }
-        public float StepThreshold { get; set; }
-        public float RandomizationOffset { get; set; }
-        public float LongStepSpeedModifier { get; set; }
-        public float RunSpeedThreshold { get; set; }
-        public float RunModifier { get; set; }
+        public float FarDistance;
+        public float NearDistance;
+        public float LegLength;
+        public float FootHeight;
+        public float StepHeight;
+        public float ShortStepHeightModifier;
+        public float StepSpeed;
+        public float StepLength;
+        public float StepThreshold;
+        public float RandomizationOffset;
+        public float LongStepSpeedModifier;
+        public float RunSpeedThreshold;
+        public float RunModifier;
     }
 }

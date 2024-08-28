@@ -14,7 +14,7 @@ namespace PolearmStudios.Animation.Procedural
         [SerializeField] LayerMask groundMask;
         [SerializeField] IKTargetPlacerData data;
 
-        ProceduralStepData stepData;
+        [SerializeField] ProceduralStepData stepData;
 
         bool isGrounded;
         RaycastHit hit;
@@ -31,11 +31,7 @@ namespace PolearmStudios.Animation.Procedural
                 return adjustedHitPoint + (((stepData.StepLength) * (adjustedHitPoint - target.position).normalized) + (hit.normal * stepData.FootHeight)); 
             } 
         }
-        private Vector3 Outward { get { return (transform.position - opposite.transform.position).normalized; } }
-        private Vector3 Down => -parent.up;
-        private Vector3 Forward => transform.forward;
-        private Vector3 Backward => -transform.forward;
-        private bool LongStep { get { return Vector3.Distance(FootDestination, target.position) > stepData.FarDistance && (opposite.isGrounded || centerOfMass.MovementDirection.magnitude > stepData.StepThreshold || IsRunning); } }
+        private bool LongStep { get { return Vector3.Distance(FootDestination, target.position) > stepData.FarDistance && (opposite.isGrounded || centerOfMass.MovementDirection.magnitude > stepData.StepThreshold); } }
         private bool ShortStep { get { return Vector3.Distance(FootDestination, target.position) > stepData.NearDistance && (opposite.isGrounded || centerOfMass.MovementDirection.magnitude > stepData.StepThreshold); } }
         private bool IsRunning { get { return centerOfMass.CurrentSpeed > stepData.RunSpeedThreshold; } }
         #endregion
@@ -43,7 +39,6 @@ namespace PolearmStudios.Animation.Procedural
         #region Public Variables
         public Vector3 TargetPos { get => target.position; }
         public bool SkipForAverage;
-        public float LimbMass = 5f;
         #endregion
 
         private void Awake() => Initialize();
@@ -60,57 +55,58 @@ namespace PolearmStudios.Animation.Procedural
 
         private void Initialize()
         {
+            void RandomizeVariables()
+        {
+            float Randomize() => Random.Range(-1, 1) * stepData.RandomizationOffset;
+            stepData.StepSpeed += Randomize();
+            stepData.NearDistance += Randomize();
+            stepData.FarDistance += Randomize();
+        }
             stepData = data.LoadData();
             transform.localPosition = new(transform.localPosition.x, stepData.LegLength * .5f, transform.localPosition.z);
             RandomizeVariables();
             speed = stepData.StepSpeed;
         }
 
-        private void RandomizeVariables()
-        {
-            stepData.StepSpeed += Random.Range(-1, 1) * stepData.RandomizationOffset;
-            stepData.NearDistance += Random.Range(-1, 1) * stepData.RandomizationOffset;
-            stepData.FarDistance += Random.Range(-1, 1) * stepData.RandomizationOffset;
-        }
-
         public void CheckForStep()
         {
-            if (SpherecastInDirection(Forward)) return;                         // Checking Forward
-
-            if (RaycastInDirection(Backward, stepData.LegLength)) return;           // Checking Backwards
-
-            if (RaycastInDirection(Outward, stepData.LegLength * 0.5f)) return;     // Checking Away From Opposite
-
-            if (SpherecastInDirection(Down)) return;                            // Checking Ground
-        }
-
-        private bool SpherecastInDirection(Vector3 direction)
-        {
-            bool Cast(Vector3 dir, float radius) => Physics.SphereCast(transform.position, radius, dir, out hit, stepData.LegLength, groundMask);
-
-            if (Cast(direction, stepData.FarDistance) || Cast(direction, stepData.NearDistance))
+            bool SpherecastInDirection(Vector3 direction)
+            {
+                bool Cast(Vector3 dir, float radius) => Physics.SphereCast(transform.position, radius, dir, out hit, stepData.LegLength, groundMask);
+                return Cast(direction, stepData.FarDistance) || Cast(direction, stepData.NearDistance);
+            }
+            bool RaycastInDirection(Vector3 direction, float dist) => Physics.Raycast(transform.position, direction, out hit, dist, groundMask);
+            // Checking Forward
+            if (SpherecastInDirection(transform.forward))
             {
                 PrepareStep();
-                return true;
+                return;
             }
-            return false;
-        }
-
-        private bool RaycastInDirection(Vector3 direction, float dist)
-        {
-            if (Physics.Raycast(transform.position, direction, out hit, dist, groundMask))
+            // Checking Backwards
+            if (RaycastInDirection(-transform.forward, stepData.LegLength))
             {
                 PrepareStep();
-                return true;
+                return;
             }
-            return false;
+            // Checking Away From Opposite
+            if (RaycastInDirection((transform.position - opposite.transform.position).normalized, stepData.LegLength * 0.5f))
+            {
+                PrepareStep();
+                return;
+            }
+            // Checking Ground
+            if (SpherecastInDirection(-transform.up))
+            {
+                PrepareStep();
+                return;
+            }
         }
 
         private void PrepareStep()
         {
             if (!ShortStep && !LongStep) return;
             target.up = hit.normal;
-            if (centerOfMass.CurrentSpeed > stepData.RunSpeedThreshold)
+            /*if (centerOfMass.CurrentSpeed > stepData.RunSpeedThreshold)
             {
                 speed = stepData.StepSpeed * stepData.RunSpeedThreshold;
                 distTraveled = Vector3.Distance(FootDestination, target.position) * stepData.RunModifier;
@@ -118,7 +114,7 @@ namespace PolearmStudios.Animation.Procedural
                 stepThreshold = stepData.StepThreshold * stepData.RunModifier;
                 isGrounded = false;
                 return;
-            }
+            }*/
             stepThreshold = stepData.StepThreshold;
             stepHeight = stepData.StepHeight;
             speed = ShortStep ? stepData.StepSpeed : stepData.StepSpeed * stepData.LongStepSpeedModifier;
@@ -130,7 +126,7 @@ namespace PolearmStudios.Animation.Procedural
         {
             time += Time.fixedDeltaTime * speed;
             target.position = Parabola(target.position, FootDestination, Mathf.Clamp(distTraveled, 0, stepHeight), time);
-            if (Vector3.Distance(FootDestination, target.position) < stepThreshold || (IsRunning && Vector3.Distance(FootDestination, target.position) < stepData.FarDistance))
+            if (Vector3.Distance(FootDestination, target.position) < stepThreshold)
             {
                 time = 0;
                 isGrounded = true;
@@ -139,8 +135,23 @@ namespace PolearmStudios.Animation.Procedural
 
         public void SetTargetParent(Transform newParent) => target.SetParent(newParent);
 
+        private Vector3 Parabola(Vector3 start, Vector3 end, float height, float t)
+        {
+            float f(float x) => -4 * height * x * x + 4 * height * x;
+
+            var mid = Vector3.Lerp(start, end, t);
+
+            return new Vector3(mid.x, f(t) + Mathf.Lerp(start.y, end.y, t), mid.z);
+        }
+
         private void OnDrawGizmosSelected()
         {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(transform.position, .5f);
+            if (Physics.Raycast(transform.position, -transform.up, out RaycastHit hitInfo))
+            {
+                Gizmos.DrawLine(transform.position, hitInfo.point);
+            }
             Gizmos.color = Color.green;
             if (!isGrounded) Gizmos.color = Color.blue;
             if (ShortStep) Gizmos.color = Color.yellow;
@@ -161,14 +172,6 @@ namespace PolearmStudios.Animation.Procedural
             }
         }
 
-        private Vector3 Parabola(Vector3 start, Vector3 end, float height, float t)
-        {
-            float f(float x) => -4 * height * x * x + 4 * height * x;
-
-            var mid = Vector3.Lerp(start, end, t);
-
-            return new Vector3(mid.x, f(t) + Mathf.Lerp(start.y, end.y, t), mid.z);
-        }
     }
 
 }

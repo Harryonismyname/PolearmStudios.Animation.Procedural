@@ -15,7 +15,6 @@ namespace PolearmStudios.Animation.Procedural
         [Header("Settings")]
         [SerializeField] Vector3 offset = Vector3.up;
         [SerializeField] float movementSpeed = 1.5f;
-        [SerializeField] float mass = 15;
 
         Vector3 averagePosition;
         Vector3 averageUp;
@@ -50,13 +49,10 @@ namespace PolearmStudios.Animation.Procedural
 
         private void LateUpdate()
         {
-            //body.up = Vector3.MoveTowards(body.up, averageUp, Time.smoothDeltaTime * movementSpeed);
-
             body.SetPositionAndRotation(
                 Vector3.MoveTowards(body.position, desiredPosition, Time.smoothDeltaTime * movementSpeed),
                 Quaternion.Slerp(body.rotation, desiredRotation, movementSpeed * Time.smoothDeltaTime)
                 );
-            
             previousPos = body.position;
         }
 

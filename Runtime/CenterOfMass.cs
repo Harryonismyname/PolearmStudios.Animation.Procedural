@@ -21,7 +21,7 @@ public class CenterOfMass : MonoBehaviour
     private void FixedUpdate()
     {
         FindCenterOfMass();
-        transform.position = massWeightedPosition;
+        transform.position = massWeightedPosition + MovementDirection * CurrentSpeed;
         PreviousPosition = transform.position;
     }
 
