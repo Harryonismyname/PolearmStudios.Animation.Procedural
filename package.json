@@ -1,5 +1,5 @@
 {
-  "name": "com.PolearmStudios.Animation.Procedural",
+  "name": "PolearmStudios.Animation.Procedural",
   "version": "0.0.1",
   "displayName": "Polearm Procedural Animations",
   "description": "Procedural animation tools, best used with Unity's Animation Rigging package, but will work with other IK solutions",
