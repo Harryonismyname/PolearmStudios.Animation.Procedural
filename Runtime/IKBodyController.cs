@@ -15,6 +15,7 @@ namespace PolearmStudios.Animation.Procedural
         [Header("Settings")]
         [SerializeField] Vector3 offset = Vector3.up;
         [SerializeField] float movementSpeed = 1.5f;
+        [SerializeField] float maxUpAngle = 45;
 
         Vector3 averagePosition;
         Vector3 averageUp;
@@ -68,6 +69,7 @@ namespace PolearmStudios.Animation.Procedural
             }
             averagePosition /= legs.Length;
             averageUp /= legs.Length;
+            if (Vector3.Angle(averageUp, body.up) > maxUpAngle)) averageUp += body.up;
         }
 
         private void OnDrawGizmos()
