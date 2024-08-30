@@ -171,7 +171,7 @@ namespace PolearmStudios.Animation.Procedural
                 Gizmos.DrawLine(Parabola(target.position, FootDestination, Mathf.Clamp(Vector3.Distance(target.position, FootDestination), 0, stepData.StepHeight), i), Parabola(target.position, FootDestination, Mathf.Clamp(Vector3.Distance(target.position, FootDestination), 0, stepData.StepHeight), i + 0.1f));
             }
         }
-        private void private void OnValidate() 
+        private void OnValidate() 
         {
             if(opposite != null && opposite.opposite == null) opposite.opposite = this;
         }
