@@ -69,7 +69,7 @@ namespace PolearmStudios.Animation.Procedural
             }
             averagePosition /= legs.Length;
             averageUp /= legs.Length;
-            if (Vector3.Angle(averageUp, body.up) > maxUpAngle) averageUp += body.up * movementSpeed;
+            if (Vector3.Angle(averageUp, body.up) > maxUpAngle) averageUp += transform.up * movementSpeed;
         }
 
         private void OnDrawGizmos()
